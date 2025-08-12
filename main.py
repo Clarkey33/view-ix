@@ -1,6 +1,12 @@
-def main():
-    print("Hello from view-xi!")
+from fastapi import FastAPI
 
 
-if __name__ == "__main__":
-    main()
+app = FastAPI()
+
+
+@app.get("/")
+async def read_root():
+    return "Hello from view-xi!"
+
+
+

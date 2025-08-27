@@ -67,7 +67,7 @@ async def get_manager_team(
     
 
 async def get_fixtures(base_url:str=BASE_URL):
-    url = f"{base_url}/fixtures"
+    url = f"{base_url}/fixtures/"
     try:
         async with httpx.AsyncClient() as client:
             print("Acessing fixtures lists")
@@ -82,35 +82,37 @@ async def get_fixture_difficulty(
         current_game_week:int,
         player_id:int,
         player_map:dict,
-        team_map:dict,
+        #team_map:dict,
         fixtures_metadata:list
         ) -> list:
    
    player_info= player_map.get(player_id)
-   if not player_info:
+   if not player_info or not fixtures_metadata:
+       print("could not retrieve essential data sources")
        return []
    
    player_team_id = player_info.get("team")
    next_three_fixtures= [current_game_week+1, current_game_week+2, current_game_week+3]
-   fixture_difficulty = []
-   
+   fixture_difficulty=[]
+
    for match in fixtures_metadata:
-    game_week = match.get("event"," ")
-            player_team_id = player_map.get('team'," ")
-            away_team = match.get('team_a'," ")
-            home_team = match.get('team_h'," ")
-            if not game_week == gw:
-                continue
-            elif away_team == player_team_id:
-                home_team_difficulty = match.get('team_h_difficulty', " ")
-                fixture_difficulty.append(home_team_difficulty)
-            elif home_team == player_team_id:
-                away_team_difficulty = match.get('team_a_difficulty', " ")
-                fixture_difficulty.append(away_team_difficulty)
-            else:
-                return None
-            
-        return fixture_difficulty
+       game_week=match.get("event")
+
+       if game_week in next_three_fixtures:
+           away_team = match.get('team_a')
+           home_team = match.get('team_h')
+
+           if away_team==player_team_id:
+               difficulty=match.get('team_a_difficulty')
+               fixture_difficulty.append(difficulty)
+           elif home_team==player_team_id:
+               difficulty=match.get('team_h_difficulty')
+               fixture_difficulty.append(difficulty)
+
+   return fixture_difficulty
+               
+                        
+               
 
 
 

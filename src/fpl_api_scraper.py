@@ -16,7 +16,8 @@ async def get_fpl_metadata(base_url:str=BASE_URL)-> dict:
     except httpx.HTTPError as exc:
         print(f"HTTP Exception for {exc.request.url} - {exc}")
     except Exception as e:
-        return f"Error occured during retrieval: {e}"
+        print(f"Error occured during retrieval: {e}")
+        return None
     
 async def create_player_map(bootstrap_data:dict)-> dict:
 
@@ -63,7 +64,8 @@ async def get_manager_team(
     except httpx.HTTPError as exc:
         print(f"HTTP Exception for {exc.request.url} - {exc}")
     except Exception as e:
-        return f"Error occured during retrieval: {e}"
+        print( f"Error occured during retrieval: {e}")
+        return None
     
 
 async def get_fixtures(base_url:str=BASE_URL):

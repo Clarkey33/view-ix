@@ -12,7 +12,7 @@ app = FastAPI()
 
 #origins = ["*"]
 origins = [
-    "https://view-ix.vercel.app/",
+    "https://view-ix.vercel.app",
     "http://127.0.0.1:8001",
     "http://localhost:8001",
 ]

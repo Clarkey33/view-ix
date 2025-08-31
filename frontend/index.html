@@ -191,7 +191,8 @@
             displayGameweek.textContent = gameWeek;
             try {
                 
-                const apiUrl = `http://127.0.0.1:8001/get_team_details?team_id=${teamId}&game_week=${gameWeek}`;
+                //const apiUrl = `http://127.0.0.1:8001/get_team_details?team_id=${teamId}&game_week=${gameWeek}`;
+                const apiUrl = `https://view-ix-api.onrender.com/get_team_details?team_id=${teamId}&game_week=${gameWeek}`;
                 const response = await fetch(apiUrl);
                 if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.detail || `An error occurred: ${response.statusText}`); }
                 const data = await response.json(); fullPlayerData = data.players || [];

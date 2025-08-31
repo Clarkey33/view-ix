@@ -25,10 +25,6 @@
             </h1>
             <p class="text-slate-400">Enter your FPL Team ID to get an instant overview.</p>
         </header>
-
-        <footer class="text-center mt-8">
-            <button id="feedback-link" class="text-cyan-400 hover:underline">Got Feedback or an Idea?</button>
-        </footer>
         
         <div class="flex flex-col sm:flex-row justify-center items-center gap-2 mb-8">
             <input type="number" id="team-id-input" placeholder="e.g., 123456", min="1", class="bg-slate-800 border border-slate-600 rounded-md px-4 py-2 text-lg text-white w-full max-w-xs focus:ring-2 focus:ring-cyan-400 focus:outline-none transition">
@@ -90,7 +86,11 @@
     </div>
 
     <script>
-      
+        
+        const feedbackLink = document.getElementById('feedback-link');
+        const feedbackModal = document.getElementById('feedback-modal');
+        const feedbackModalCloseButton = document.getElementById('feedback-modal-close-button');
+
         const teamIdInput = document.getElementById('team-id-input');
         const gameweekInput = document.getElementById('gameweek-input');
         const playerTableBody = document.getElementById('player-table-body');
@@ -106,7 +106,39 @@
         teamIdInput.addEventListener('input', preventNegativeInput);
         gameweekInput.addEventListener('input', preventNegativeInput);
 
-       
+        const showFeedbackModal = () => feedbackModal.classList.remove('hidden');
+        const hideFeedbackModal = () => feedbackModal.classList.add('hidden');
+        
+        feedbackLink.addEventListener('click', showFeedbackModal);
+        feedbackModalCloseButton.addEventListener('click', hideFeedbackModal);
+        feedbackModal.addEventListener('click', (e) => {
+            if (e.target === feedbackModal) {
+                hideFeedbackModal();
+            }
+        });
+
+        document.getElementById('feedback-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const data = new FormData(form);
+            const action = form.action;
+            
+            fetch(action, {
+                method: 'POST',
+                body: data,
+                headers: { 'Accept': 'application/json' }
+            }).then(response => {
+                if (response.ok) {
+                    alert('Thanks for your feedback!');
+                    form.reset();
+                    hideFeedbackModal();
+                } else {
+                    alert('Oops! There was a problem submitting your form.');
+                }
+            });
+        });
+
+        
         const renderTable = (players) => {
             playerTableBody.innerHTML = '';
             const positionOrder = { "GKP": 1, "DEF": 2, "MID": 3, "FWD": 4 };

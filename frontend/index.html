@@ -12,12 +12,14 @@
         ::-webkit-scrollbar-track { background: #1e293b; }
         ::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #0ea5e9; }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
     </style>
 </head>
 <body class="font-sans">
 
     <div class="container mx-auto p-4 md:p-8 max-w-7xl">
-        
         
         <header class="text-center mb-8">
             <h1 class="text-4xl md:text-5xl font-bold text-white mb-2">
@@ -25,20 +27,18 @@
             </h1>
             <p class="text-slate-400">Enter your FPL Team ID to get an instant overview.</p>
         </header>
-        
+
         <div class="flex flex-col sm:flex-row justify-center items-center gap-2 mb-8">
-            <input type="number" id="team-id-input" placeholder="e.g., 123456", min="1", class="bg-slate-800 border border-slate-600 rounded-md px-4 py-2 text-lg text-white w-full max-w-xs focus:ring-2 focus:ring-cyan-400 focus:outline-none transition">
-            <input type="number" id="gameweek-input" placeholder="GW",min="1", class="bg-slate-800 border border-slate-600 rounded-md px-4 py-2 text-lg text-white w-24 focus:ring-2 focus:ring-cyan-400 focus:outline-none transition">
+            <input type="number" id="team-id-input" placeholder="e.g., 123456" min="1" class="bg-slate-800 border border-slate-600 rounded-md px-4 py-2 text-lg text-white w-full max-w-xs focus:ring-2 focus:ring-cyan-400 focus:outline-none transition">
+            <input type="number" id="gameweek-input" placeholder="GW" min="1" class="bg-slate-800 border border-slate-600 rounded-md px-4 py-2 text-lg text-white w-24 focus:ring-2 focus:ring-cyan-400 focus:outline-none transition">
             <button id="submit-button" class="bg-gradient-to-r from-[#37003c] to-[#6a00ff] text-white font-bold py-2 px-6 rounded-md text-lg hover:opacity-90 transition-transform transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
                 Get Team
             </button>
         </div>
-
         
         <div id="loading-state" class="text-center text-cyan-400 text-xl hidden my-8">Loading...</div>
         <div id="error-container" class="text-center text-red-400 border border-red-400 bg-red-900/20 p-4 rounded-md hidden my-8"></div>
 
-       
         <div id="results-container" class="bg-slate-800/50 rounded-lg shadow-lg overflow-hidden hidden">
             <div class="p-4 bg-slate-700/50">
                 <h2 class="text-xl font-bold">Team Overview - Gameweek <span id="display-gameweek"></span></h2>
@@ -59,6 +59,11 @@
             </div>
         </div>
 
+        <!-- Correctly placed footer -->
+        <footer class="text-center mt-12 py-4">
+            <button id="feedback-link" class="text-cyan-400 hover:underline text-sm">Got Feedback or an Idea?</button>
+        </footer>
+
     </div>
 
     <!-- Player Detail Modal -->
@@ -72,12 +77,14 @@
         </div>
     </div>
 
+    <!-- Feedback Modal -->
     <div id="feedback-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 hidden">
         <div class="bg-slate-800 rounded-lg shadow-2xl w-full max-w-lg border border-slate-600">
             <div class="p-4 border-b border-slate-600 flex justify-between items-center">
                 <h2 class="text-2xl font-bold text-white">Share Your Feedback</h2>
                 <button id="feedback-modal-close-button" class="text-slate-400 hover:text-white text-3xl">&times;</button>
             </div>
+            <!-- IMPORTANT: Remember to replace YOUR_UNIQUE_CODE with your real Formspree endpoint -->
             <form id="feedback-form" action="https://formspree.io/f/mkgvbrqq" method="POST" class="p-6">
                 <textarea name="feedback" required placeholder="What's on your mind? Did you find a bug? Have an idea for a new feature?" rows="5" class="bg-slate-900 border border-slate-600 rounded-md p-2 w-full text-white focus:ring-2 focus:ring-cyan-400 focus:outline-none"></textarea>
                 <button type="submit" class="mt-4 w-full bg-gradient-to-r from-[#37003c] to-[#6a00ff] text-white font-bold py-2 px-6 rounded-md text-lg hover:opacity-90">Submit</button>
@@ -86,137 +93,31 @@
     </div>
 
     <script>
-        
-        const feedbackLink = document.getElementById('feedback-link');
-        const feedbackModal = document.getElementById('feedback-modal');
-        const feedbackModalCloseButton = document.getElementById('feedback-modal-close-button');
-
+        // --- DOM Elements ---
         const teamIdInput = document.getElementById('team-id-input');
         const gameweekInput = document.getElementById('gameweek-input');
-        const playerTableBody = document.getElementById('player-table-body');
-       
-        let fullPlayerData = [];
-
-        const preventNegativeInput = (event) => {
-            
-            if (parseInt(event.target.value, 10) < 1) {
-                event.target.value = '';
-            }
-        };
-        teamIdInput.addEventListener('input', preventNegativeInput);
-        gameweekInput.addEventListener('input', preventNegativeInput);
-
-        const showFeedbackModal = () => feedbackModal.classList.remove('hidden');
-        const hideFeedbackModal = () => feedbackModal.classList.add('hidden');
-        
-        feedbackLink.addEventListener('click', showFeedbackModal);
-        feedbackModalCloseButton.addEventListener('click', hideFeedbackModal);
-        feedbackModal.addEventListener('click', (e) => {
-            if (e.target === feedbackModal) {
-                hideFeedbackModal();
-            }
-        });
-
-        document.getElementById('feedback-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const form = e.target;
-            const data = new FormData(form);
-            const action = form.action;
-            
-            fetch(action, {
-                method: 'POST',
-                body: data,
-                headers: { 'Accept': 'application/json' }
-            }).then(response => {
-                if (response.ok) {
-                    alert('Thanks for your feedback!');
-                    form.reset();
-                    hideFeedbackModal();
-                } else {
-                    alert('Oops! There was a problem submitting your form.');
-                }
-            });
-        });
-
-        
-        const renderTable = (players) => {
-            playerTableBody.innerHTML = '';
-            const positionOrder = { "GKP": 1, "DEF": 2, "MID": 3, "FWD": 4 };
-            players.sort((a, b) => positionOrder[a.position] - positionOrder[b.position]);
-
-            players.forEach(player => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-slate-700/50';
-
-                // --- Player Cell  ---
-                const nameCell = document.createElement('td');
-                nameCell.className = 'p-4';
-
-                const playerContainer = document.createElement('div');
-                playerContainer.className = 'flex items-center gap-3';
-
-                // 1. Create the image element
-                const playerImage = document.createElement('img');
-                
-                // 2. Set the SRC to the direct photo_url from the API
-                playerImage.src = player.photo_url;
-                
-                playerImage.alt = player.web_name;
-                playerImage.className = 'w-10 h-10 rounded-full border-2 border-slate-600';
-
-               
-                playerImage.onerror = function() {
-                    this.onerror = null; // Prevents infinite loops
-                    this.src = 'https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_0-110.png';
-                };
-
-                const nameButton = document.createElement('button');
-                nameButton.className = 'font-bold text-lg text-cyan-400 hover:underline';
-                nameButton.textContent = player.web_name;
-                nameButton.dataset.playerId = player.element;
-
-                playerContainer.appendChild(playerImage);
-                playerContainer.appendChild(nameButton);
-                nameCell.appendChild(playerContainer);
-
-               
-                const posCell = document.createElement('td');
-                posCell.className = 'p-4 text-slate-300 hidden md:table-cell';
-                posCell.textContent = player.position;
-
-                const statusCell = document.createElement('td');
-                statusCell.className = 'p-4 font-semibold';
-                statusCell.innerHTML = renderStatus(player.player_status);
-
-                const certaintyCell = document.createElement('td');
-                certaintyCell.className = 'p-4';
-                certaintyCell.innerHTML = renderCertainty(player.start_certainty);
-
-                const fixtureCell = document.createElement('td');
-                const difficulty = player.next_opponent_difficulty;
-                let colorClass = 'bg-slate-600';
-                if (difficulty <= 2) colorClass = 'bg-green-500';
-                else if (difficulty === 3) colorClass = 'bg-yellow-400';
-                else if (difficulty >= 4) colorClass = 'bg-red-500';
-                fixtureCell.innerHTML = `<div class="flex items-center gap-2">
-                                           <span class="w-4 h-4 rounded-full ${colorClass}"></span>
-                                           <span class="text-slate-300">${player.next_opponent_name}</span>
-                                         </div>`;
-
-                row.append(nameCell, posCell, statusCell, certaintyCell, fixtureCell);
-                playerTableBody.appendChild(row);
-            });
-        };
-
-       
         const displayGameweek = document.getElementById('display-gameweek');
         const submitButton = document.getElementById('submit-button');
         const loadingState = document.getElementById('loading-state');
         const errorContainer = document.getElementById('error-container');
         const resultsContainer = document.getElementById('results-container');
+        const playerTableBody = document.getElementById('player-table-body');
         const modal = document.getElementById('player-modal');
         const modalCloseButton = document.getElementById('modal-close-button');
+        const feedbackLink = document.getElementById('feedback-link');
+        const feedbackModal = document.getElementById('feedback-modal');
+        const feedbackModalCloseButton = document.querySelector('#feedback-modal button'); // More specific selector
+        const feedbackForm = document.getElementById('feedback-form');
+        let fullPlayerData = [];
 
+        // --- Input Validation ---
+        const preventNegativeInput = (event) => {
+            if (parseInt(event.target.value, 10) < 1) event.target.value = '';
+        };
+        teamIdInput.addEventListener('input', preventNegativeInput);
+        gameweekInput.addEventListener('input', preventNegativeInput);
+
+        // --- Visual Helper Functions ---
         const renderStatus = (status) => {
             let icon = ''; let colorClass = '';
             switch (status) {
@@ -241,14 +142,14 @@
             }
             return `<div class="flex items-center gap-2"><span class="text-xl">${icon}</span> <span>${certainty}</span></div>`;
         };
+
+        // --- Main API Call Function ---
         const fetchTeamData = async () => {
             const teamId = teamIdInput.value; const gameWeek = gameweekInput.value;
             if (!teamId || !gameWeek) { showError("Please enter both a Team ID and a Gameweek."); return; }
             submitButton.disabled = true; loadingState.classList.remove('hidden'); errorContainer.classList.add('hidden'); resultsContainer.classList.add('hidden');
             displayGameweek.textContent = gameWeek;
             try {
-                
-                //const apiUrl = `http://127.0.0.1:8001/get_team_details?team_id=${teamId}&game_week=${gameWeek}`;
                 const apiUrl = `https://view-ix-api.onrender.com/get_team_details?team_id=${teamId}&game_week=${gameWeek}`;
                 const response = await fetch(apiUrl);
                 if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.detail || `An error occurred: ${response.statusText}`); }
@@ -258,24 +159,49 @@
             } catch (error) { showError(error.message); }
             finally { submitButton.disabled = false; loadingState.classList.add('hidden'); }
         };
+
+        // --- UI Rendering Functions ---
+        const renderTable = (players) => {
+            playerTableBody.innerHTML = ''; const positionOrder = { "GKP": 1, "DEF": 2, "MID": 3, "FWD": 4 };
+            players.sort((a, b) => positionOrder[a.position] - positionOrder[b.position]);
+            players.forEach(player => {
+                const row = document.createElement('tr'); row.className = 'hover:bg-slate-700/50';
+                const nameCell = document.createElement('td'); nameCell.className = 'p-4';
+                const playerContainer = document.createElement('div'); playerContainer.className = 'flex items-center gap-3';
+                const playerImage = document.createElement('img');
+                playerImage.src = player.photo_url;
+                playerImage.alt = player.web_name; playerImage.className = 'w-10 h-10 rounded-full border-2 border-slate-600';
+                playerImage.onerror = function() { this.onerror = null; this.src = 'https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_0-110.png'; };
+                const nameButton = document.createElement('button'); nameButton.className = 'font-bold text-lg text-cyan-400 hover:underline'; nameButton.textContent = player.web_name; nameButton.dataset.playerId = player.element;
+                playerContainer.appendChild(playerImage); playerContainer.appendChild(nameButton); nameCell.appendChild(playerContainer);
+                const posCell = document.createElement('td'); posCell.className = 'p-4 text-slate-300 hidden md:table-cell'; posCell.textContent = player.position;
+                const statusCell = document.createElement('td'); statusCell.className = 'p-4 font-semibold'; statusCell.innerHTML = renderStatus(player.player_status);
+                const certaintyCell = document.createElement('td'); certaintyCell.className = 'p-4'; certaintyCell.innerHTML = renderCertainty(player.start_certainty);
+                const fixtureCell = document.createElement('td'); const difficulty = player.next_opponent_difficulty;
+                let colorClass = 'bg-slate-600'; if (difficulty <= 2) colorClass = 'bg-green-500'; else if (difficulty === 3) colorClass = 'bg-yellow-400'; else if (difficulty >= 4) colorClass = 'bg-red-500';
+                fixtureCell.innerHTML = `<div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full ${colorClass}"></span><span class="text-slate-300">${player.next_opponent_name}</span></div>`;
+                row.append(nameCell, posCell, statusCell, certaintyCell, fixtureCell); playerTableBody.appendChild(row);
+            });
+        };
         const showError = (message) => { errorContainer.textContent = `Error: ${message}`; errorContainer.classList.remove('hidden'); };
         const showModal = (player) => {
             document.getElementById('modal-player-name').textContent = player.web_name;
             const modalGrid = document.getElementById('modal-details-grid');
             const details = {
-                'Fitness': renderStatus(player.player_status),
-                'Start Certainty': renderCertainty(player.start_certainty),
+                'Fitness': renderStatus(player.player_status), 'Start Certainty': renderCertainty(player.start_certainty),
                 'Injury News': `<span class="text-lg">${player.player_news}</span>`,
                 'Next Opponent': `<div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full ${player.next_opponent_difficulty <= 2 ? 'bg-green-500' : player.next_opponent_difficulty === 3 ? 'bg-yellow-400' : 'bg-red-500'}"></span><span class="text-lg">${player.next_opponent_name}</span></div>`,
-                'Position': `<span class="text-lg">${player.position}</span>`,
-                'Cost': `<span class="text-lg">£${(player.now_cost / 10).toFixed(1)}m</span>`,
-                'Goals Scored': `<span class="text-lg">${player.goals_scored}</span>`,
-                'Assists': `<span class="text-lg">${player.assists}</span>`,
+                'Position': `<span class="text-lg">${player.position}</span>`, 'Cost': `<span class="text-lg">£${(player.now_cost / 10).toFixed(1)}m</span>`,
+                'Goals Scored': `<span class="text-lg">${player.goals_scored}</span>`, 'Assists': `<span class="text-lg">${player.assists}</span>`,
             };
             modalGrid.innerHTML = Object.entries(details).map(([key, value]) => `<div class="bg-slate-700/50 p-4 rounded-md"><h3 class="text-slate-400 text-sm font-bold mb-1">${key}</h3>${value}</div>`).join('');
             modal.classList.remove('hidden');
         };
         const hideModal = () => modal.classList.add('hidden');
+        const showFeedbackModal = () => feedbackModal.classList.remove('hidden');
+        const hideFeedbackModal = () => feedbackModal.classList.add('hidden');
+
+        // --- Event Listeners ---
         submitButton.addEventListener('click', fetchTeamData);
         teamIdInput.addEventListener('keydown', (e) => e.key === 'Enter' && fetchTeamData());
         gameweekInput.addEventListener('keydown', (e) => e.key === 'Enter' && fetchTeamData());
@@ -288,6 +214,19 @@
         });
         modalCloseButton.addEventListener('click', hideModal);
         modal.addEventListener('click', (e) => e.target === modal && hideModal());
+        feedbackLink.addEventListener('click', showFeedbackModal);
+        feedbackModalCloseButton.addEventListener('click', hideFeedbackModal);
+        feedbackModal.addEventListener('click', (e) => e.target === feedbackModal && hideFeedbackModal());
+        feedbackForm.addEventListener('submit', function(e) {
+            e.preventDefault(); const form = e.target; const data = new FormData(form);
+            fetch(form.action, { method: 'POST', body: data, headers: { 'Accept': 'application/json' } })
+            .then(response => {
+                if (response.ok) {
+                    alert('Thanks for your feedback!');
+                    form.reset(); hideFeedbackModal();
+                } else { alert('Oops! There was a problem submitting your form.'); }
+            }).catch(() => alert('Oops! There was a problem submitting your form.'));
+        });
     </script>
 </body>
 </html>

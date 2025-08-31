@@ -119,17 +119,17 @@ async def get_fixture_difficulty(
                opponent_name=team_map.get(home_team_id)
                is_home_game= False
                fixture_difficulty.append({
-                   "opponent_name": opponent_name,
+                   "opponent_name": f"{opponent_name} (A)",
                    "difficulty": difficulty,
                    "is_home": is_home_game,
                    "gameweek":game_week
                    })
            elif home_team_id==player_team_id:
                difficulty=match.get('team_a_difficulty')
-               opponent_name=team_map.get(home_team_id)
+               opponent_name=team_map.get(away_team_id)
                is_home_game= True
                fixture_difficulty.append({
-                   "opponent_name": opponent_name,
+                   "opponent_name": f"{opponent_name} (H)",
                    "difficulty": difficulty,
                    "is_home": is_home_game,
                    "gameweek":game_week

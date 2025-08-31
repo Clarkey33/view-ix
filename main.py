@@ -16,42 +16,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"], # Allows all methods (GET, POST, etc)
-    allow_headers=["*"], # Allows all headers
+    allow_methods=["*"], 
+    allow_headers=["*"], 
 )
-
-
-# @app.get("/")
-# async def read_root():
-#     return "Hello from view-xi!"
-
-
-
-# @app.get("/player-image/{player_code}")
-# async def get_player_image(player_code:int):
-#     image_url = "https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_code}.png"
-
-#     headers = {
-#         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-#         "Referer": "https://fantasy.premierleague.com/"
-#     }
-
-#     async with httpx.AsyncClient() as client:
-#         try:
-#             response = await client.get(image_url,
-#                                         headers=headers,
-#                                         follow_redirects=True)
-#             response.raise_for_status()
-#             return StreamingResponse(response.iter_bytes(),
-#                                      media_type=response.headers.get('Content-Type')
-#                                      )
-#         except httpx.HTTPStatusError:
-#             raise HTTPException(status_code=404, detail="Player image not found.")
-#         except Exception:
-#             raise HTTPException(status_code=500, detail="Error fetching player image.")
-    
-
-
 
 @app.get("/get_team_details")
 async def get_manager_team_details(team_id:int,game_week:int):

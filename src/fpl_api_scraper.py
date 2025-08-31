@@ -29,7 +29,6 @@ async def create_player_map(bootstrap_data:dict)-> dict:
 async def get_fpl_metadata_cached() -> dict:
 
     global cached_bootstrap_data, LAST_CACHE_TIME, CACHE_DURATION_SECONDS
-    #print(f"cache_duration_secods{type(CACHE_DURATION_SECONDS)}, last cache time{type(LAST_CACHE_TIME)}")
     current_time= time.time()
 
     if not cached_bootstrap_data or (current_time-LAST_CACHE_TIME > CACHE_DURATION_SECONDS):
@@ -66,7 +65,6 @@ async def get_manager_team(
             response_json = response.json()
             managers_team = response_json.get("picks",[])
             print(f"Manager's picks retrieved succesfully")
-            #print(f" data type: {type(managers_team)}")
             if managers_team:
                 print(f"Manager's picks retrieved succesfully for GW{game_week}")
             else:

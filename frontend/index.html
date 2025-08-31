@@ -4,15 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ViewXI - FPL Dashboard</title>
-    <!-- Include Tailwind CSS via CDN -->
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom styles for a better look and feel */
-        body {
-            background-color: #030118; /* A very dark FPL-like purple */
-            color: #e2e8f0;
-        }
-        /* Custom scrollbar for a more polished look */
+        body { background-color: #030118; color: #e2e8f0; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #1e293b; }
         ::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 4px; }
@@ -23,7 +18,7 @@
 
     <div class="container mx-auto p-4 md:p-8 max-w-7xl">
         
-        <!-- Header Section -->
+        
         <header class="text-center mb-8">
             <h1 class="text-4xl md:text-5xl font-bold text-white mb-2">
                 View<span style="color: #00ff87;">XI</span> Dashboard
@@ -31,21 +26,20 @@
             <p class="text-slate-400">Enter your FPL Team ID to get an instant overview.</p>
         </header>
 
-        <!-- Input Section -->
+        
         <div class="flex flex-col sm:flex-row justify-center items-center gap-2 mb-8">
             <input type="number" id="team-id-input" placeholder="e.g., 123456" class="bg-slate-800 border border-slate-600 rounded-md px-4 py-2 text-lg text-white w-full max-w-xs focus:ring-2 focus:ring-cyan-400 focus:outline-none transition">
-            <!-- ADDED Gameweek Input -->
             <input type="number" id="gameweek-input" placeholder="GW" class="bg-slate-800 border border-slate-600 rounded-md px-4 py-2 text-lg text-white w-24 focus:ring-2 focus:ring-cyan-400 focus:outline-none transition">
             <button id="submit-button" class="bg-gradient-to-r from-[#37003c] to-[#6a00ff] text-white font-bold py-2 px-6 rounded-md text-lg hover:opacity-90 transition-transform transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
                 Get Team
             </button>
         </div>
 
-        <!-- Loading and Error States -->
+        
         <div id="loading-state" class="text-center text-cyan-400 text-xl hidden my-8">Loading...</div>
         <div id="error-container" class="text-center text-red-400 border border-red-400 bg-red-900/20 p-4 rounded-md hidden my-8"></div>
 
-        <!-- Results Section (The "Matrix") -->
+       
         <div id="results-container" class="bg-slate-800/50 rounded-lg shadow-lg overflow-hidden hidden">
             <div class="p-4 bg-slate-700/50">
                 <h2 class="text-xl font-bold">Team Overview - Gameweek <span id="display-gameweek"></span></h2>
@@ -56,101 +50,40 @@
                         <tr>
                             <th class="p-4">Player</th>
                             <th class="p-4 hidden md:table-cell">Position</th>
-                            <th class="p-4 hidden sm:table-cell">Team</th>
-                            <!-- ADDED Player Status Column -->
                             <th class="p-4">Status</th>
                             <th class="p-4">Start Certainty</th>
-                            <th class="p-4">Next Fixture</th>
+                            <th class="p-4">Next Fixture</th> 
                         </tr>
                     </thead>
-                    <tbody id="player-table-body" class="divide-y divide-slate-700">
-                        <!-- Player rows will be injected here by JavaScript -->
-                    </tbody>
+                    <tbody id="player-table-body" class="divide-y divide-slate-700"></tbody>
                 </table>
             </div>
         </div>
 
     </div>
 
-    <!-- Player Detail Modal (no changes needed here) -->
+    <!-- Player Detail Modal -->
     <div id="player-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 hidden">
         <div id="modal-content" class="bg-slate-800 rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-slate-600">
-            <!-- Modal content structure is the same -->
             <div class="sticky top-0 bg-slate-800 p-4 border-b border-slate-600 flex justify-between items-center z-10">
                 <h2 id="modal-player-name" class="text-2xl font-bold text-white">Player Name</h2>
                 <button id="modal-close-button" class="text-slate-400 hover:text-white text-3xl">&times;</button>
             </div>
-            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-slate-700/50 p-4 rounded-md"><h3 class="text-slate-400 text-sm font-bold mb-1">Fitness</h3><p id="modal-fitness-status" class="text-xl font-semibold"></p></div>
-                <div class="bg-slate-700/50 p-4 rounded-md"><h3 class="text-slate-400 text-sm font-bold mb-1">Start Certainty</h3><p id="modal-start-certainty" class="text-xl font-semibold"></p></div>
-                <div class="md:col-span-2 bg-slate-700/50 p-4 rounded-md"><h3 class="text-slate-400 text-sm font-bold mb-1">Injury News</h3><p id="modal-injury-news" class="text-lg"></p></div>
-                <div class="bg-slate-700/50 p-4 rounded-md"><h3 class="text-slate-400 text-sm font-bold mb-1">Next Opponent</h3><p id="modal-next-opponent" class="text-lg"></p></div>
-                <div class="bg-slate-700/50 p-4 rounded-md"><h3 class="text-slate-400 text-sm font-bold mb-1">Next Fixture Difficulty</h3><p id="modal-next-difficulty" class="text-lg"></p></div>
-                <div class="bg-slate-700/50 p-4 rounded-md"><h3 class="text-slate-400 text-sm font-bold mb-1">Position</h3><p id="modal-position" class="text-lg"></p></div>
-                <div class="bg-slate-700/50 p-4 rounded-md"><h3 class="text-slate-400 text-sm font-bold mb-1">Cost</h3><p id="modal-cost" class="text-lg"></p></div>
-                <div class="bg-slate-700/50 p-4 rounded-md"><h3 class="text-slate-400 text-sm font-bold mb-1">Goals Scored</h3><p id="modal-goals" class="text-lg"></p></div>
-                <div class="bg-slate-700/50 p-4 rounded-md"><h3 class="text-slate-400 text-sm font-bold mb-1">Assists</h3><p id="modal-assists" class="text-lg"></p></div>
-            </div>
+            <div id="modal-details-grid" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6"></div>
         </div>
     </div>
 
-
     <script>
-        // --- DOM Element Selection ---
+      
         const teamIdInput = document.getElementById('team-id-input');
-        const gameweekInput = document.getElementById('gameweek-input'); // NEW
-        const displayGameweek = document.getElementById('display-gameweek'); // NEW
-        const submitButton = document.getElementById('submit-button');
-        const loadingState = document.getElementById('loading-state');
-        const errorContainer = document.getElementById('error-container');
-        const resultsContainer = document.getElementById('results-container');
+        const gameweekInput = document.getElementById('gameweek-input');
         const playerTableBody = document.getElementById('player-table-body');
-        const modal = document.getElementById('player-modal');
-        const modalCloseButton = document.getElementById('modal-close-button');
+       
         let fullPlayerData = [];
 
-        // --- Main API Call Function ---
-        const fetchTeamData = async () => {
-            const teamId = teamIdInput.value;
-            const gameWeek = gameweekInput.value; // NEW
-            if (!teamId || !gameWeek) { // NEW check for both
-                showError("Please enter both a Team ID and a Gameweek.");
-                return;
-            }
-
-            submitButton.disabled = true;
-            loadingState.classList.remove('hidden');
-            errorContainer.classList.add('hidden');
-            resultsContainer.classList.add('hidden');
-            playerTableBody.innerHTML = '';
-            displayGameweek.textContent = gameWeek; // NEW: Set gameweek in title
-
-            try {
-                const apiUrl = `http://127.0.0.1:8001/get_team_details?team_id=${teamId}&game_week=${gameWeek}`;
-                const response = await fetch(apiUrl);
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || `An error occurred: ${response.statusText}`);
-                }
-                const data = await response.json();
-                fullPlayerData = data.players || [];
-
-                if (fullPlayerData.length === 0) {
-                    showError(`No team data found for Gameweek ${gameWeek}. The gameweek may not be active yet`);
-                } else {
-                renderTable(fullPlayerData);
-                resultsContainer.classList.remove('hidden');
-                }
-            } catch (error) {
-                showError(error.message);
-            } finally {
-                submitButton.disabled = false;
-                loadingState.classList.add('hidden');
-            }
-        };
-        
-        // --- UI Rendering Functions ---
+       
         const renderTable = (players) => {
+            playerTableBody.innerHTML = '';
             const positionOrder = { "GKP": 1, "DEF": 2, "MID": 3, "FWD": 4 };
             players.sort((a, b) => positionOrder[a.position] - positionOrder[b.position]);
 
@@ -158,127 +91,136 @@
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-slate-700/50';
 
-                // Player Name
+                // --- Player Cell  ---
                 const nameCell = document.createElement('td');
                 nameCell.className = 'p-4';
 
-                //Container for the image and name
                 const playerContainer = document.createElement('div');
-                playerContainer.className = 'flex items-center';
+                playerContainer.className = 'flex items-center gap-3';
 
+                // 1. Create the image element
                 const playerImage = document.createElement('img');
+                
+                // 2. Set the SRC to the direct photo_url from the API
                 playerImage.src = player.photo_url;
-                //playerImage.src = `http://127.0.0.1:8001/player-image/${player.code}`;
+                
                 playerImage.alt = player.web_name;
-                playerImage.className = 'w-10 h-10 rounded-full mr-3 border-2 border-slate-600';
+                playerImage.className = 'w-10 h-10 rounded-full border-2 border-slate-600';
 
+               
                 playerImage.onerror = function() {
-                    this.onerror=null
-
-                this.src='https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_0-110.png';
+                    this.onerror = null; // Prevents infinite loops
+                    this.src = 'https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_0-110.png';
                 };
-
 
                 const nameButton = document.createElement('button');
                 nameButton.className = 'font-bold text-lg text-cyan-400 hover:underline';
                 nameButton.textContent = player.web_name;
                 nameButton.dataset.playerId = player.element;
-                
-                //add image container to the cell
+
                 playerContainer.appendChild(playerImage);
                 playerContainer.appendChild(nameButton);
-
-                //nameCell.appendChild(nameButton);
                 nameCell.appendChild(playerContainer);
 
-                // Position
+               
                 const posCell = document.createElement('td');
                 posCell.className = 'p-4 text-slate-300 hidden md:table-cell';
                 posCell.textContent = player.position;
 
-                // Team
-                const teamCell = document.createElement('td');
-                teamCell.className = 'p-4 text-slate-300 hidden sm:table-cell';
-                teamCell.textContent = player.team_name;
-                
-                // --- NEW: Player Status ---
                 const statusCell = document.createElement('td');
                 statusCell.className = 'p-4 font-semibold';
-                // Add color based on status
-                if (player.player_status === 'Injured' || player.player_status === 'Suspended') {
-                    statusCell.classList.add('text-red-400');
-                } else if (player.player_status === 'Doubtful') {
-                    statusCell.classList.add('text-yellow-400');
-                }
-                statusCell.textContent = player.player_status;
-                // -------------------------
+                statusCell.innerHTML = renderStatus(player.player_status);
 
-                // Start Certainty
                 const certaintyCell = document.createElement('td');
                 certaintyCell.className = 'p-4';
-                certaintyCell.textContent = player.start_certainty;
+                certaintyCell.innerHTML = renderCertainty(player.start_certainty);
 
-                //Fixture Difficulty Cell
                 const fixtureCell = document.createElement('td');
-                fixtureCell.className = 'p-4';
+                const difficulty = player.next_opponent_difficulty;
+                let colorClass = 'bg-slate-600';
+                if (difficulty <= 2) colorClass = 'bg-green-500';
+                else if (difficulty === 3) colorClass = 'bg-yellow-400';
+                else if (difficulty >= 4) colorClass = 'bg-red-500';
+                fixtureCell.innerHTML = `<div class="flex items-center gap-2">
+                                           <span class="w-4 h-4 rounded-full ${colorClass}"></span>
+                                           <span class="text-slate-300">${player.next_opponent_name}</span>
+                                         </div>`;
 
-                const fixtureContainer = document.createElement('div');
-                fixtureContainer.className = 'flex items-center gap-2';
-
-                const difficultyCircle = document.createElement('span');
-                difficultyCircle.className = 'w-4 h-4 rounded-full';
-
-                const difficulty =player.next_opponent_difficulty;
-                if (difficulty <= 2) {
-                    difficultyCircle.classList.add('bg-green-500');//Easy
-                } else if (difficulty === 3) {
-                    difficultyCircle.classList.add('bg-yellow-400'); // Medium
-                } else if (difficulty >= 4) {
-                    difficultyCircle.classList.add('bg-red-500'); // Hard
-                } else {
-                    difficultyCircle.classList.add('bg-slate-600'); // Unknown
-                }
-
-                const opponentText = document.createElement('span');
-                opponentText.className = 'text-slate-300';
-                opponentText.textContent = player.next_opponent_name;
-
-                fixtureContainer.appendChild(difficultyCircle);
-                fixtureContainer.appendChild(opponentText);
-                fixtureCell.appendChild(fixtureContainer);
-
-
-                // Removed Cost cell to make space, as it's in the modal
-                row.append(nameCell, posCell, teamCell, statusCell, certaintyCell,fixtureCell);
+                row.append(nameCell, posCell, statusCell, certaintyCell, fixtureCell);
                 playerTableBody.appendChild(row);
             });
         };
 
-        const showError = (message) => {
-            errorContainer.textContent = `Error: ${message}`;
-            errorContainer.classList.remove('hidden');
-        };
+       
+        const displayGameweek = document.getElementById('display-gameweek');
+        const submitButton = document.getElementById('submit-button');
+        const loadingState = document.getElementById('loading-state');
+        const errorContainer = document.getElementById('error-container');
+        const resultsContainer = document.getElementById('results-container');
+        const modal = document.getElementById('player-modal');
+        const modalCloseButton = document.getElementById('modal-close-button');
 
+        const renderStatus = (status) => {
+            let icon = ''; let colorClass = '';
+            switch (status) {
+                case 'Available':   icon = '✅'; colorClass = 'text-green-400'; break;
+                case 'Doubtful':    icon = '🟡'; colorClass = 'text-yellow-400'; break;
+                case 'Injured':     icon = '❌'; colorClass = 'text-red-400'; break;
+                case 'Suspended':   icon = '🟥'; colorClass = 'text-red-400'; break;
+                default:            icon = '❓'; colorClass = 'text-slate-400';
+            }
+            return `<div class="flex items-center gap-2"><span class="text-xl">${icon}</span> <span class="${colorClass}">${status}</span></div>`;
+        };
+        const renderCertainty = (certainty) => {
+            let icon = '';
+            switch (certainty.split('(')[0].trim()) {
+                case 'Nailed On': icon = '🔥'; break;
+                case 'Likely Starter': icon = '✅'; break;
+                case 'Doubtful': icon = '🟡'; break;
+                case 'Rotation Risk': icon = '😐'; break;
+                case 'Bench Player': icon = '❄️'; break;
+                case 'Unavailable': icon = '❌'; break;
+                default: icon = 'ℹ️';
+            }
+            return `<div class="flex items-center gap-2"><span class="text-xl">${icon}</span> <span>${certainty}</span></div>`;
+        };
+        const fetchTeamData = async () => {
+            const teamId = teamIdInput.value; const gameWeek = gameweekInput.value;
+            if (!teamId || !gameWeek) { showError("Please enter both a Team ID and a Gameweek."); return; }
+            submitButton.disabled = true; loadingState.classList.remove('hidden'); errorContainer.classList.add('hidden'); resultsContainer.classList.add('hidden');
+            displayGameweek.textContent = gameWeek;
+            try {
+                
+                const apiUrl = `http://127.0.0.1:8001/get_team_details?team_id=${teamId}&game_week=${gameWeek}`;
+                const response = await fetch(apiUrl);
+                if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.detail || `An error occurred: ${response.statusText}`); }
+                const data = await response.json(); fullPlayerData = data.players || [];
+                if (fullPlayerData.length === 0) { showError(`No team data found for Gameweek ${gameWeek}. The gameweek may not be active yet.`); }
+                else { renderTable(fullPlayerData); resultsContainer.classList.remove('hidden'); }
+            } catch (error) { showError(error.message); }
+            finally { submitButton.disabled = false; loadingState.classList.add('hidden'); }
+        };
+        const showError = (message) => { errorContainer.textContent = `Error: ${message}`; errorContainer.classList.remove('hidden'); };
         const showModal = (player) => {
             document.getElementById('modal-player-name').textContent = player.web_name;
-            document.getElementById('modal-fitness-status').textContent = player.player_status;
-            document.getElementById('modal-start-certainty').textContent = player.start_certainty;
-            document.getElementById('modal-injury-news').textContent = player.player_news;
-            document.getElementById('modal-next-opponent').textContent = player.next_opponent_name;
-            document.getElementById('modal-next-difficulty').textContent = player.next_opponent_difficulty;
-            document.getElementById('modal-position').textContent = player.position;
-            document.getElementById('modal-cost').textContent = `£${(player.now_cost / 10).toFixed(1)}m`;
-            document.getElementById('modal-goals').textContent = player.goals_scored;
-            document.getElementById('modal-assists').textContent = player.assists;
+            const modalGrid = document.getElementById('modal-details-grid');
+            const details = {
+                'Fitness': renderStatus(player.player_status),
+                'Start Certainty': renderCertainty(player.start_certainty),
+                'Injury News': `<span class="text-lg">${player.player_news}</span>`,
+                'Next Opponent': `<div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full ${player.next_opponent_difficulty <= 2 ? 'bg-green-500' : player.next_opponent_difficulty === 3 ? 'bg-yellow-400' : 'bg-red-500'}"></span><span class="text-lg">${player.next_opponent_name}</span></div>`,
+                'Position': `<span class="text-lg">${player.position}</span>`,
+                'Cost': `<span class="text-lg">£${(player.now_cost / 10).toFixed(1)}m</span>`,
+                'Goals Scored': `<span class="text-lg">${player.goals_scored}</span>`,
+                'Assists': `<span class="text-lg">${player.assists}</span>`,
+            };
+            modalGrid.innerHTML = Object.entries(details).map(([key, value]) => `<div class="bg-slate-700/50 p-4 rounded-md"><h3 class="text-slate-400 text-sm font-bold mb-1">${key}</h3>${value}</div>`).join('');
             modal.classList.remove('hidden');
         };
-
         const hideModal = () => modal.classList.add('hidden');
-
-        // --- Event Listeners ---
         submitButton.addEventListener('click', fetchTeamData);
         teamIdInput.addEventListener('keydown', (e) => e.key === 'Enter' && fetchTeamData());
-        gameweekInput.addEventListener('keydown', (e) => e.key === 'Enter' && fetchTeamData()); // NEW
+        gameweekInput.addEventListener('keydown', (e) => e.key === 'Enter' && fetchTeamData());
         playerTableBody.addEventListener('click', (e) => {
             const button = e.target.closest('button[data-player-id]');
             if (button) {
@@ -288,7 +230,6 @@
         });
         modalCloseButton.addEventListener('click', hideModal);
         modal.addEventListener('click', (e) => e.target === modal && hideModal());
-
     </script>
 </body>
 </html>

@@ -98,21 +98,31 @@
 
     <div id="how-to-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 hidden">
         <div class="bg-slate-800 rounded-lg shadow-2xl w-full max-w-lg border border-slate-600 text-slate-300">
+            <!-- Header -->
             <div class="p-4 border-b border-slate-600 flex justify-between items-center">
                 <h2 class="text-2xl font-bold text-white">How to Find Your FPL ID</h2>
                 <button id="how-to-modal-close-button" class="text-slate-400 hover:text-white text-3xl">&times;</button>
             </div>
-            <div class="p-6 space-y-4">
-                <p>You can find your ID on the official FPL website (this is not available in the mobile app).</p>
-                <ol class="list-decimal list-inside space-y-2">
-                    <li>Open your browser and log in to <a href="https://fantasy.premierleague.com" target="_blank" class="text-cyan-400 hover:underline">fantasy.premierleague.com</a></li>
-                    <li>Click on the <strong>"Points"</strong> or <strong>"My Team"</strong> tab.</li>
-                    <li>Look at the URL in your browser's address bar. Your Team ID is the 5-7 digit number you see there.</li>
-                </ol>
-                <div class="bg-slate-900 p-2 rounded-md break-all">
-                    <code class="text-sm">https://fantasy.premierleague.com/entry/<strong class="text-cyan-400 text-lg">123456</strong>/history</code>
+            <!-- Body -->
+            <div class="p-6 space-y-6">
+                <p>To get your team data, we need your numeric Team ID from the official FPL website.</p>
+
+                <div>
+                    <p class="font-semibold text-white">Step 1: Get Your ID</p>
+                    <p class="text-slate-400 mb-3">Click the button below to open the FPL site. After you log in, your Team ID will be in the URL.</p>
+                    <a href="https://fantasy.premierleague.com/history" target="_blank" rel="noopener noreferrer" 
+                    class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-5 rounded-lg inline-block w-full text-center no-underline">
+                        Find My FPL Team ID
+                    </a>
                 </div>
-                <p class="text-center text-xs text-slate-500 pt-2">(You can use any number from your own URL)</p>
+
+                <div>
+                    <p class="font-semibold text-white">Step 2: Copy & Paste</p>
+                    <p class="text-slate-400 mb-3">Copy the number from that page's URL and paste it on our main page.</p>
+                    <div class="bg-slate-900 p-3 rounded-lg break-all">
+                        <code class="text-sm">https://fantasy.premierleague.com/entry/<strong class="bg-cyan-500 text-white px-1 rounded-md">123456</strong>/history</code>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

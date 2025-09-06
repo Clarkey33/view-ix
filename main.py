@@ -114,6 +114,44 @@ async def get_manager_team_details(team_id:int,game_week:int):
     return TeamDetailsResponse(players=manager_team_details)
 
 
+@app.get("/gameweek_status")
+async def get_gameweek_status(game_week:int)->dict:
+
+    fpl_metadata = await get_fpl_metadata_cached()
+    events_list = fpl_metadata.get('events',[])
+
+    gameweek_num=None
+    status={}
+    #current_gameweek= None
+    #previous_gameweek = None
+    #next_gameweek=None
+
+    for event in events_list:
+        print(f"Attempting to retrieve current gameweek")
+        current_status = event.get("is_current")
+        if current_status == True:
+            gameweek_num = int(event.get('id'))
+            print(f"Current game week found")
+            if game_week == gameweek_num:
+                print(f"User requested game week: {game_week}, is the current game week")
+                status['current_gameweek']= game_week
+                status['previous_gameweek'] = game_week -1
+                status['next_gameweek'] = game_week+1
+                return status
+            else:
+                print(f"User requested game week: {game_week}, is not the current game week ")
+        else:
+            continue
+
+    
+
+
+             
+
+
+
+
+
 
 
 

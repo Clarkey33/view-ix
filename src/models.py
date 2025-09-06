@@ -29,7 +29,6 @@ class PlayerDetail(BaseModel):
         from_attributes = True
 
 class TeamDetailsResponse(BaseModel):
-
     players: List[PlayerDetail]
 
 
@@ -37,3 +36,29 @@ class Fixture(BaseModel):
     opponent_name:str
     difficulty:int
     is_home:bool
+
+
+class PlanningPlayerDetail(BaseModel):
+
+    element:int
+    position:int
+    is_captain:bool
+    is_vice_captain:bool
+
+    first_name:str
+    second_name:str
+    web_name:str
+
+    player_status:str
+    player_news:str
+    team_name:str
+    position:str
+    photo_url:str
+    next_3_fixtures: list
+
+
+class PlanningViewResponse(BaseModel):
+    view_mode: str = "planning"
+    requested_gameweek:int
+    roster_gameweek: int
+    players: list[PlanningPlayerDetail]

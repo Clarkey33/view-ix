@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 from src.fpl_api_scraper import get_fpl_metadata,get_fpl_metadata_cached,get_manager_team,create_player_map
 from src.fpl_api_scraper import get_fixtures, create_team_mapping, get_fixture_difficulty, create_position_mapping
 from src.fpl_api_scraper import map_player_status, construct_player_image_url
-from src.models import PlayerDetail, TeamDetailsResponse, Fixture
+from src.models import PlayerDetail, TeamDetailsResponse, Fixture, PlanningPlayerDetail, PlanningViewResponse
 import httpx
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -28,7 +28,10 @@ app.add_middleware(
 @app.get("/get_team_details")
 async def get_manager_team_details(team_id:int,game_week:int):
 
-    manager_team_picks = await get_manager_team(team_id, game_week)
+    gameweek_status= await get_gameweek_status()
+    current_gameweek = gameweek_status.get("current_gameweek")
+    
+    #manager_team_picks = await get_manager_team(team_id, game_week)
     bootstrap_data = await get_fpl_metadata_cached()
     fixtures_metadata = await get_fixtures()
 
@@ -37,42 +40,70 @@ async def get_manager_team_details(team_id:int,game_week:int):
     position_map = await create_position_mapping(bootstrap_data)
 
     start_certainty = None
-    
+
+
     if not bootstrap_data: #or not fixtures_metadata:
         print("essential data source could not be retrieved from API")
         raise HTTPException(status_code=503, detail="Could not retrieve core data from FPL API")
-      
+        
+    
+    is_planning_view = game_week > current_gameweek
+    roster_gameweek = current_gameweek if is_planning_view else game_week
+
+    manager_team_picks = await get_manager_team(team_id, roster_gameweek)
+
     manager_team_details= []
+
     for pick in manager_team_picks:
         player_id = pick.get("element")
         player_details = player_map.get(player_id)
 
-        if player_details:
-            print(f"Accessing fixture difficulty for: {player_id}")
-            fixture_difficulty_list = await get_fixture_difficulty(
-                current_game_week=game_week,
-                player_id=player_id,
-                player_map=player_map,
-                team_map=team_map,
-                fixtures_metadata=fixtures_metadata
-                )
+        if not player_details:
+                continue
+        
+        team_id = player_details.get("team")
+        team_name = team_map.get(team_id)
+        position_id = player_details.get("element_type")
+        position = position_map.get(position_id, "UNK")
+        player_code=player_details.get("code",0)
+        photo_url = construct_player_image_url(player_code=player_code)
+        fpl_status = player_details.get("status", "u")
+        player_availability = map_player_status(fpl_status)
+        player_news = player_details.get("news","No news available")
+
+        print(f"Accessing fixture difficulty for: {player_id}")
+        fixture_difficulty_list = await get_fixture_difficulty(
+            current_game_week=game_week,
+            player_id=player_id,
+            player_map=player_map,
+            team_map=team_map,
+            fixtures_metadata=fixtures_metadata
+            )
+
+        if is_planning_view:
+            player_data = {
+                    **pick,
+                    **player_details,
+                    "view_mode": "planning",
+                    "requested_gameweek": game_week,
+                    "roster_gameweek": roster_gameweek,
+                    "player_status": player_availability,
+                    "player_news": player_news,
+                    "team_name": team_name,
+                    "position": position,
+                    "next_3_fixtures":fixture_difficulty_list,
+                    "photo_url":photo_url
+                }
             
+            player_obj = PlanningPlayerDetail(**player_data)
+
+        else:
             next_fixture = fixture_difficulty_list[0] if fixture_difficulty_list else {}
             next_opponent_name = next_fixture.get("opponent_name","N/A")
-            next_opponent_difficulty = next_fixture.get('difficulty',0)
+            next_opponent_difficulty = next_fixture.get('difficulty',0) 
+
+            #player_availability = map_player_status(fpl_status)
             
-            team_id = player_details.get("team")
-            team_name = team_map.get(team_id)
-            position_id = player_details.get("element_type")
-            position = position_map.get(position_id, "UNK")
-
-            fpl_status = player_details.get("status", "u")
-            player_availability = map_player_status(fpl_status)
-            player_news = player_details.get("news","No news available")
-
-            player_code=player_details.get("code",0)
-            photo_url = construct_player_image_url(player_code=player_code)
-            print("photo_url:", photo_url)
 
             number_of_starts= player_details.get('starts',0)
             start_ratio = number_of_starts/game_week if game_week > 0 else 0
@@ -92,8 +123,8 @@ async def get_manager_team_details(team_id:int,game_week:int):
             else:
                 start_certainty= "Bench Player"
 
-
-            combined_data ={
+         
+            player_data ={
                 **pick,
                 **player_details,
                 "player_status": player_availability,
@@ -104,44 +135,93 @@ async def get_manager_team_details(team_id:int,game_week:int):
                 "next_opponent_name": next_opponent_name,
                 "next_opponent_difficulty": next_opponent_difficulty,
                 "photo_url":photo_url
-
             }
-            
-            player_obj = PlayerDetail(**combined_data)
-            manager_team_details.append(player_obj)
+                
+            player_obj = PlayerDetail(**player_data)
+        manager_team_details.append(player_obj)
 
-    print(f"Successfully retrieved details for manager's team of {len(manager_team_details)} players.")
-    return TeamDetailsResponse(players=manager_team_details)
+    if is_planning_view:
+        return PlanningViewResponse(
+            requested_gameweek=game_week,
+            roster_gameweek=current_gameweek,
+            players= manager_team_details
+        )
+    else:
+        return TeamDetailsResponse(players=manager_team_details)
+    
+
+
+
+
+    #     print(f"Successfully retrieved details for manager's team of {len(manager_team_details)} players.")
+    #     return TeamDetailsResponse(players=manager_team_details)
+    # elif game_week > current_gameweek:
+    #     manager_team_picks = await get_manager_team(team_id, current_gameweek)
+    #     for pick in manager_team_picks:
+    #         player_id = pick.get("element")
+    #         player_details = player_map.get(player_id)
+
+    #         if player_details:
+    #             print(f"Accessing fixture difficulty for: {player_id}")
+    #             fixture_difficulty_list = await get_fixture_difficulty(
+    #                 current_game_week=game_week,
+    #                 player_id=player_id,
+    #                 player_map=player_map,
+    #                 team_map=team_map,
+    #                 fixtures_metadata=fixtures_metadata
+    #                 )
+    #             team_id = player_details.get("team")
+    #             team_name = team_map.get(team_id)
+    #             position_id = player_details.get("element_type")
+    #             position = position_map.get(position_id, "UNK")
+
+    #             fpl_status = player_details.get("status", "u")
+    #             player_availability = map_player_status(fpl_status)
+    #             player_news = player_details.get("news","No news available")
+
+    #             player_code=player_details.get("code",0)
+    #             photo_url = construct_player_image_url(player_code=player_code)
+    #             print("photo_url:", photo_url)
+
+    #             combined_data=
+
+    #             return combined_data
+                
+
+
+
+
+
 
 
 @app.get("/gameweek_status")
-async def get_gameweek_status(game_week:int)->dict:
+async def get_gameweek_status()->dict:
 
     fpl_metadata = await get_fpl_metadata_cached()
     events_list = fpl_metadata.get('events',[])
 
     gameweek_num=None
     status={}
-    #current_gameweek= None
-    #previous_gameweek = None
-    #next_gameweek=None
 
     for event in events_list:
         print(f"Attempting to retrieve current gameweek")
         current_status = event.get("is_current")
-        if current_status == True:
-            gameweek_num = int(event.get('id'))
-            print(f"Current game week found")
-            if game_week == gameweek_num:
-                print(f"User requested game week: {game_week}, is the current game week")
-                status['current_gameweek']= game_week
-                status['previous_gameweek'] = game_week -1
-                status['next_gameweek'] = game_week+1
+        try:
+
+            if current_status == True:
+                gameweek_num = int(event.get('id'))
+                print(f"Current game week found")
+                # if game_week == gameweek_num:
+                #     print(f"User requested game week: {game_week}, is the current game week")
+                status['current_gameweek']= gameweek_num
+                status['previous_gameweek'] = gameweek_num -1
+                status['next_gameweek'] = gameweek_num +1
                 return status
             else:
-                print(f"User requested game week: {game_week}, is not the current game week ")
-        else:
-            continue
+                continue
+        except Exception as e:
+            print(f"Failed to find current gameweek {e}")
+            return {}
 
     
 

@@ -1,13 +1,3 @@
-Of course. This is the perfect time to create the public-facing README.md. It will serve as the front door to your project, explaining what it is and how to use it, while the CHARTER.md remains your internal strategic guide.
-
-Here is a complete, professional README.md file in Markdown, ready to be added to your project.
-
-code
-Markdown
-download
-content_copy
-expand_less
-
 # ViewXI
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)

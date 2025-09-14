@@ -105,6 +105,7 @@ async def get_fixture_difficulty(
    
    player_team_id = player_info.get("team")
    next_three_fixtures= [current_game_week+1, current_game_week+2, current_game_week+3]
+   
    fixture_difficulty=[]
 
    for match in fixtures_metadata:
@@ -116,23 +117,31 @@ async def get_fixture_difficulty(
 
            if away_team_id==player_team_id:
                difficulty=match.get('team_h_difficulty')
+               player_team_score = match.get('team_a_score')
+               opponent_team_score = match.get('team_h_score')
                opponent_name=team_map.get(home_team_id)
                is_home_game= False
                fixture_difficulty.append({
                    "opponent_name": f"{opponent_name} (A)",
                    "difficulty": difficulty,
                    "is_home": is_home_game,
-                   "gameweek":game_week
+                   "gameweek":game_week,
+                   "player_team_score":player_team_score,
+                   "opponent_team_score": opponent_team_score
                    })
            elif home_team_id==player_team_id:
                difficulty=match.get('team_a_difficulty')
                opponent_name=team_map.get(away_team_id)
+               player_team_score = match.get('team_h_score')
+               opponent_team_score = match.get('team_a_score')
                is_home_game= True
                fixture_difficulty.append({
                    "opponent_name": f"{opponent_name} (H)",
                    "difficulty": difficulty,
                    "is_home": is_home_game,
-                   "gameweek":game_week
+                   "gameweek":game_week,
+                   "player_team_score":player_team_score,
+                   "opponent_team_score": opponent_team_score
                    })
 
    return fixture_difficulty

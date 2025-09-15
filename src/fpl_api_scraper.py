@@ -104,14 +104,14 @@ async def get_fixture_difficulty(
        return []
    
    player_team_id = player_info.get("team")
-   next_three_fixtures= [current_game_week+1, current_game_week+2, current_game_week+3]
+   next_fixtures= [current_game_week,current_game_week+1, current_game_week+2]
    
    fixture_difficulty=[]
 
    for match in fixtures_metadata:
        game_week=match.get("event")
 
-       if game_week in next_three_fixtures:
+       if game_week in next_fixtures:
            away_team_id = match.get('team_a')
            home_team_id = match.get('team_h')
 

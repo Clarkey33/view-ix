@@ -50,8 +50,6 @@ async def get_manager_team_details(team_id:int,game_week:int):
         
     
     is_planning_view = game_week > current_gameweek
-    # is_live_view = game_week == current_gameweek
-    # is_historical_view = game_week < current_gameweek
     roster_gameweek = current_gameweek if is_planning_view else game_week
 
     manager_team_picks = await get_manager_team(team_id, roster_gameweek)
@@ -74,7 +72,6 @@ async def get_manager_team_details(team_id:int,game_week:int):
 
         }
                
-
         if is_planning_view:
             fixture_difficulty_list = await get_fixture_difficulty(
                 current_game_week=game_week,
@@ -84,60 +81,105 @@ async def get_manager_team_details(team_id:int,game_week:int):
                 fixtures_metadata=fixtures_metadata
             )
 
+            player_availability = map_player_status(player_details.get("status", "u"))
+           
+            number_of_starts= player_details.get('starts',0)
+            start_ratio = number_of_starts/game_week if game_week > 0 else 0
+            
+            if player_availability == 'Unavailable' or player_availability == 'Suspended' or player_availability == 'Injured':
+                start_certainty = "Bench Player"
+            elif player_availability == 'Doubtful' and start_ratio >.60:
+                start_certainty = "Doubtful (but a regular starter)"
+            elif player_availability == 'Doubtful' and start_ratio <.60:
+                start_certainty = "Doubtful (and not a regular starter)"
+            elif player_availability == 'Available' and start_ratio >=.85:
+                start_certainty = "High"
+            elif player_availability == 'Available' and start_ratio >=.60:
+                start_certainty = "Likely Starter"
+            elif player_availability == 'Available' and start_ratio >=.30 and start_ratio <.60:
+                start_certainty = "Rotation Risk"
+            else:
+                start_certainty= "Bench Player"
+
+
+
             player_obj = PlanningPlayerDetail(
                 **base_player_data,
-                player_availability= map_player_status(player_details.get("status", "u")),
+                player_status= map_player_status(player_details.get("status", "u")),
                 player_news = player_details.get("news","No news available"),
-                next_3_fixtures=fixture_difficulty_list
+                start_certainty=start_certainty,
+                upcoming_fixtures=fixture_difficulty_list
             )
-        else:
-            player_obj_data = {**base_player_data}
+            manager_team_details.append(player_obj)
 
-            if game_week == current_gameweek:
-                player_availability = map_player_status(player_details.get("status", "u"))
-                player_obj_data["player_status"]= player_availability
+        elif game_week==current_gameweek:
+            
+            fixture_difficulty_list = await get_fixture_difficulty(current_game_week=game_week,
+                                                                    player_id=player_id,
+                                                                    player_map=player_map,
+                                                                    team_map=team_map,
+                                                                    fixtures_metadata=fixtures_metadata
+                                                                    )
+            
+            next_fixture = fixture_difficulty_list[0] if fixture_difficulty_list else {}
 
-                number_of_starts= player_details.get('starts',0)
-                start_ratio = number_of_starts/game_week if game_week > 0 else 0
-                
-                if player_availability == 'Unavailable' or player_availability == 'Suspended' or player_availability == 'Injured':
-                    start_certainty = "Bench Player"
-                elif player_availability == 'Doubtful' and start_ratio >.60:
-                    start_certainty = "Doubtful (but a regular starter)"
-                elif player_availability == 'Doubtful' and start_ratio <.60:
-                    start_certainty = "Doubtful (and not a regular starter)"
-                elif player_availability == 'Available' and start_ratio >=.85:
-                    start_certainty = "High"
-                elif player_availability == 'Available' and start_ratio >=.60:
-                    start_certainty = "Likely Starter"
-                elif player_availability == 'Available' and start_ratio >=.30 and start_ratio <.60:
-                    start_certainty = "Rotation Risk"
-                else:
-                    start_certainty= "Bench Player"
-
-                player_obj_data["start_certainty"] = start_certainty
-                player_obj_data["event_points"] = player_details.get("event_points", 0)
-                player_obj_data["bps"] = player_details.get("bps", 0)
-                player_obj_data["defensive_contribution_per_90"] = player_details.get(
-                    "defensive_contribution_per_90", 0.0
-                    )
+            player_availability = map_player_status(player_details.get("status", "u"))
+           
+            number_of_starts= player_details.get('starts',0)
+            start_ratio = number_of_starts/game_week if game_week > 0 else 0
+            
+            if player_availability == 'Unavailable' or player_availability == 'Suspended' or player_availability == 'Injured':
+                start_certainty = "Bench Player"
+            elif player_availability == 'Doubtful' and start_ratio >.60:
+                start_certainty = "Doubtful (but a regular starter)"
+            elif player_availability == 'Doubtful' and start_ratio <.60:
+                start_certainty = "Doubtful (and not a regular starter)"
+            elif player_availability == 'Available' and start_ratio >=.85:
+                start_certainty = "High"
+            elif player_availability == 'Available' and start_ratio >=.60:
+                start_certainty = "Likely Starter"
+            elif player_availability == 'Available' and start_ratio >=.30 and start_ratio <.60:
+                start_certainty = "Rotation Risk"
             else:
-                fixture_list = await get_fixture_difficulty(game_week,
-                                                            player_id, 
-                                                            player_map, 
-                                                            team_map,
-                                                            fixtures_metadata
-                                                            )
-                
-                player_obj_data = {**base_player_data}
+                start_certainty= "Bench Player"
 
-                if fixture_list:
-                    historical_fixture = fixture_list[0]
-                    player_obj_data["opponent"] = historical_fixture.get("opponent_name")
-                    player_obj_data["player_team_score"] = historical_fixture.get("player_team_score")
-                    player_obj_data["opponent_team_score"] = historical_fixture.get("opponent_team_score")
+            player_obj = PlayerDetail(
+                **base_player_data,
+                player_status=player_availability,
+                player_news=player_details.get("news", "No news available"),
+                start_certainty=start_certainty,
+                opponent=next_fixture.get("opponent_name"),
+                player_team_score=next_fixture.get("player_team_score"),
+                opponent_team_score=next_fixture.get("opponent_team_score"),
+                #event_points=player_details.get("event_points", 0),
+                #bps=player_details.get("bps", 0),
+                #defensive_contribution_per_90=player_details.get("defensive_contribution_per_90", 0.0),
+                #defensive_contribution=player_details.get('defensive_contribution',0.0),
+                next_opponent_name= next_fixture.get("opponent_name"),
+                next_opponent_difficulty=next_fixture.get("difficulty")
+                )
+            manager_team_details.append(player_obj)
 
-            player_obj = PlayerDetail(**player_obj_data)
+        else:
+            fixture_list = await get_fixture_difficulty(game_week,
+                                                        player_id, 
+                                                        player_map, 
+                                                        team_map,
+                                                        fixtures_metadata
+                                                        )
+            
+            historical_fixture= fixture_list[0] if fixture_list else {}
+
+            
+            #player_obj_data = {**base_player_data}
+
+            player_obj = PlayerDetail(
+                **base_player_data,
+                opponent=historical_fixture.get("opponent_name"),
+                player_team_score=historical_fixture.get("player_team_score"),
+                opponent_team_score=historical_fixture.get("opponent_team_score")
+            )
+
             manager_team_details.append(player_obj)
 
     if is_planning_view:
@@ -185,4 +227,3 @@ async def get_gameweek_status()->dict:
         except Exception as e:
             print(f"Failed to find current gameweek {e}")
             return {}
-        

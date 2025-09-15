@@ -95,7 +95,7 @@
                     </a>
                     
                     <!-- Captaincy Analysis Button -->
-                    <a href="https://fantasy.premierleague.com/the-scout" target="_blank" rel="noopener noreferrer"
+                    <a href="https://allaboutfpl.com/category/captaincy-metrics/" target="_blank" rel="noopener noreferrer"
                     class="flex-1 bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-4 rounded-lg text-center no-underline transition-colors">
                         ©️ Get Captaincy Advice
                     </a>
@@ -294,8 +294,6 @@
                 } else { // Historical View
                     cells += `
                         <td class="p-4">${renderResult(player)}</td>
-                        <td class="p-4 text-center">${player.event_points ?? 'N/A'}</td>
-                        <td class="p-4 text-center hidden md:table-cell">${player.bps ?? 'N/A'}</td>
                     `;
                 }
                 row.innerHTML = cells;
@@ -323,7 +321,7 @@
                     <td class="p-4 font-semibold">${renderStatus(player.player_status)}</td>
                     <td class="p-4">
                         <div class="flex items-center gap-2 flex-wrap">
-                            ${player.next_3_fixtures.map(fixture => renderFixture(fixture.opponent_name, fixture.difficulty)).join('')}
+                            ${player.upcoming_fixtures.map(fixture => renderFixture(fixture.opponent_name, fixture.difficulty)).join('')}
                         </div>
                     </td>
                 `;
@@ -339,15 +337,13 @@
                     <th class="p-4 hidden md:table-cell">Position</th>
                     <th class="p-4">Status</th>
                     <th class="p-4">Start Certainty</th>
-                    <th class="p-4">Next Fixture</th> 
+                    <th class="p-4">Opponent</th> 
                 `;
             } else {
                 standardTableHeaderRow.innerHTML = `
                     <th class="p-4">Player</th>
                     <th class="p-4 hidden md:table-cell">Position</th>
                     <th class="p-4">Result</th>
-                    <th class="p-4 text-center">Points</th>
-                    <th class="p-4 text-center hidden md:table-cell">BPS</th> 
                 `;
             }
         }
@@ -401,33 +397,60 @@
         };
 
         // --- Modal Functions ---
+
+
+
         const showModal = (player) => {
             document.getElementById('modal-player-name').textContent = player.web_name;
             const modalGrid = document.getElementById('modal-details-grid');
-            const details = {
-                'Position': `<span class="text-lg">${player.position}</span>`,
-                'Cost': `<span class="text-lg">£${(player.now_cost / 10).toFixed(1)}m</span>`,
-                'Total Goals (Season)': `<span class="text-lg">${player.goals_scored ?? 'N/A'}</span>`,
-                'Total Assists (Season)': `<span class="text-lg">${player.assists ?? 'N/A'}</span>`,
-            };
-            if (player.player_status !== null) {
-                details['Fitness'] = renderStatus(player.player_status);
-                details['Injury News'] = `<span class="text-lg">${player.player_news || "No news"}</span>`;
+            
+            // --- The Dynamic Details Object ---
+            let details = {}; // Start with an empty object
+
+            // --- Determine the View Mode ---
+            const isPlanningView = player.upcoming_fixtures !== undefined;
+            const isLiveView = player.start_certainty !== undefined; // <-- Our new, reliable fingerprint
+
+            if (isPlanningView) {
+                // --- PLANNING VIEW MODAL ---
+                details = {
+                    'Fitness': renderStatus(player.player_status),
+                    'Injury News': `<span class="text-lg">${player.player_news || "No news"}</span>`,
+                    'Start Certainty': renderCertainty(player.start_certainty),
+                    'Cost': `<span class="text-lg">£${(player.now_cost / 10).toFixed(1)}m</span>`,
+                    'Position': `<span class="text-lg">${player.position}</span>`,
+                    'Total Goals (Season)': `<span class="text-lg">${player.goals_scored ?? 'N/A'}</span>`,
+                    'Total Assists (Season)': `<span class="text-lg">${player.assists ?? 'N/A'}</span>`,
+                };
+            } else if (isLiveView) {
+                // --- LIVE VIEW MODAL ---
+                details = {
+                    //'Opponent': renderFixture(player.next_opponent_name, player.next_opponent_difficulty),
+                    'Result': renderResult(player),
+                    'Fitness': renderStatus(player.player_status),
+                    'Injury News': `<span class="text-lg">${player.player_news || "No news"}</span>`,
+                    'Start Certainty': renderCertainty(player.start_certainty),
+                    'Cost': `<span class="text-lg">£${(player.now_cost / 10).toFixed(1)}m</span>`,
+                    'Gameweek Points': `<span class="text-lg">${player.event_points ?? 'N/A'}</span>`,
+                    'Bonus Points (BPS)': `<span class="text-lg">${player.bps ?? 'N/A'}</span>`,
+                    'Position': `<span class="text-lg">${player.position}</span>`,
+                };
+            } else {
+                // --- HISTORICAL VIEW MODAL (Default) ---
+                details = {
+                    'Result': renderResult(player),
+                    'Cost': `<span class="text-lg">£${(player.now_cost / 10).toFixed(1)}m</span>`,
+                    'Position': `<span class="text-lg">${player.position}</span>`,
+                    'Total Goals (Season)': `<span class="text-lg">${player.goals_scored ?? 'N/A'}</span>`,
+                    'Total Assists (Season)': `<span class="text-lg">${player.assists ?? 'N/A'}</span>`,
+                };
             }
-            if (player.start_certainty !== null) {
-                details['Start Certainty'] = renderCertainty(player.start_certainty);
-            }
-            if (player.event_points !== null) {
-                details['Gameweek Points'] = `<span class="text-lg">${player.event_points}</span>`;
-                details['Bonus Points (BPS)'] = `<span class="text-lg">${player.bps}</span>`;
-            }
-            if (player.defensive_contribution_per_90 !== null) {
-                details['Def. Actions/90'] = `<span class="text-lg">${player.defensive_contribution_per_90}</span>`;
-            }
-            if (player.opponent !== null) {
-                details['Result'] = renderResult(player);
-            }
-            modalGrid.innerHTML = Object.entries(details).map(([key, value]) => `<div class="bg-slate-700/50 p-4 rounded-md"><h3 class="text-slate-400 text-sm font-bold mb-1">${key}</h3>${value}</div>`).join('');
+            
+            // --- Render the final object ---
+            modalGrid.innerHTML = Object.entries(details)
+                .map(([key, value]) => `<div class="bg-slate-700/50 p-4 rounded-md"><h3 class="text-slate-400 text-sm font-bold mb-1">${key}</h3>${value}</div>`)
+                .join('');
+                
             modal.classList.remove('hidden');
         };
 

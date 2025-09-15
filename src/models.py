@@ -65,8 +65,9 @@ class PlanningPlayerDetail(BaseModel):
     player_news:str= Field(..., description="The latest news on player, example injury news")
     team_name:str= Field(..., description="The name of the player's club")
     photo_url:str= Field(..., description="The full url for player image")
-    next_3_fixtures: list= Field(..., description="list of next 3 fixtures")
+    upcoming_fixtures: list= Field(..., description="list of next 3 fixtures")
     defensive_contribution_per_90:Optional[float] = Field(default=None, description="Average count of player's defensive actions")
+    start_certainty:Optional[str] = Field(default=None, description="User defined metric for how certain a player is of starting next gameweek")
     goals_scored: int
     assists: int
 
